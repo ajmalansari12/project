@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sentinel-edr.local/schemas/endpoint_event.schema.json",
+  "title": "EndpointEvent",
+  "description": "Normalized endpoint or filesystem telemetry event.",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "timestamp",
+    "source_component"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the endpoint event."
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "file_created",
+        "file_modified",
+        "file_renamed",
+        "file_deleted",
+        "process_observed",
+        "canary_triggered"
+      ],
+      "description": "Type of event detected on the endpoint."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO 8601 timestamp when the event occurred."
+    },
+    "source_component": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Sensor or subsystem component identifier emitting the event."
+    },
+    "file_path": {
+      "type": ["string", "null"],
+      "description": "Path to the affected filesystem object, if applicable."
+    },
+    "file_hash": {
+      "type": ["string", "null"],
+      "pattern": "^[a-fA-F0-9]{64}$",
+      "description": "SHA-256 cryptographic digest of the file, if available."
+    },
+    "process_id": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Process identifier (PID) associated with the event."
+    },
+    "parent_process_id": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Parent process identifier (PPID) associated with the event."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary key-value supplementary metadata."
+    }
+  },
+  "additionalProperties": false
+}

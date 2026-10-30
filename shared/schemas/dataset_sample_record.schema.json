@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sentinel-edr.local/schemas/dataset_sample_record.schema.json",
+  "title": "DatasetSampleRecord",
+  "description": "Validated metadata record representing an individual sample within an ML dataset split.",
+  "type": "object",
+  "required": [
+    "sample_id",
+    "sample_hash",
+    "dataset_name",
+    "dataset_version",
+    "target_label",
+    "split",
+    "feature_schema_version"
+  ],
+  "properties": {
+    "sample_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable unique identifier for the sample record."
+    },
+    "sample_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Canonical 64-character lowercase SHA-256 digest of the sample binary."
+    },
+    "dataset_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Name of the originating dataset collection (e.g. 'ember')."
+    },
+    "dataset_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Version identifier of the originating dataset (e.g. '2018', '2019')."
+    },
+    "source_record_id": {
+      "type": ["string", "null"],
+      "description": "Optional upstream or external dataset sample identifier."
+    },
+    "target_label": {
+      "type": "integer",
+      "enum": [0, 1],
+      "description": "Normalized binary classification target class: 0 for benign, 1 for malicious."
+    },
+    "source_label": {
+      "type": ["integer", "string", "null"],
+      "description": "Original raw label from the source dataset prior to normalization."
+    },
+    "label_provenance": {
+      "type": ["string", "null"],
+      "description": "Attribution or method used to assign the label (e.g. 'avclass_family', 'vendor_consensus')."
+    },
+    "split": {
+      "type": "string",
+      "enum": ["train", "validation", "test", "unassigned"],
+      "description": "Partition split assignment for model training and evaluation."
+    },
+    "feature_schema_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifier of the feature extraction schema applicable to this sample."
+    },
+    "relative_path": {
+      "type": ["string", "null"],
+      "pattern": "^(?![a-zA-Z]:)(?![/\\\\])(?!.*(?:^|[/\\\\])\\.\\.(?:[/\\\\]|$)).+$",
+      "description": "Optional relative path to sample binary within dataset archive (rejects absolute, UNC, drive-prefixed, or traversal paths)."
+    },
+    "collected_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Optional ISO 8601 UTC timestamp when the sample was observed or collected."
+    }
+  },
+  "additionalProperties": false
+}

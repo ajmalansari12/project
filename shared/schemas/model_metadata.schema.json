@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sentinel-edr.local/schemas/model_metadata.schema.json",
+  "title": "ModelMetadata",
+  "description": "Versioned metadata specification describing an ML model architecture, training provenance, and inference requirements.",
+  "type": "object",
+  "required": [
+    "model_id",
+    "model_version",
+    "model_family",
+    "task_type",
+    "dataset_id",
+    "dataset_version",
+    "feature_schema_version",
+    "feature_count",
+    "label_mapping",
+    "class_order"
+  ],
+  "properties": {
+    "model_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for the model family or deployment (e.g. 'sentinel-pe-lightgbm')."
+    },
+    "model_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Semantic version of the model artifact (e.g. '1.0.0')."
+    },
+    "model_family": {
+      "type": "string",
+      "enum": ["lightgbm"],
+      "description": "Approved machine learning framework (LightGBM per prd.md §11 and trd.md §3.1)."
+    },
+    "task_type": {
+      "type": "string",
+      "enum": ["binary_classification"],
+      "description": "Specific analytical task performed by the model."
+    },
+    "dataset_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifier of the dataset used for model training (e.g. 'ember')."
+    },
+    "dataset_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Version of the training dataset (e.g. '2018')."
+    },
+    "feature_schema_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Feature schema version required by this model (must match feature vector schema)."
+    },
+    "feature_count": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Exact input dimension (number of features) expected by the model."
+    },
+    "label_mapping": {
+      "type": "object",
+      "description": "Mapping from class index string to semantic label name (e.g. {'0': 'BENIGN', '1': 'MALICIOUS'}).",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "class_order": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 2,
+      "description": "Ordered array of class labels corresponding to model output probabilities (e.g. ['BENIGN', 'MALICIOUS'])."
+    },
+    "training_config": {
+      "type": ["object", "null"],
+      "description": "Optional hyperparameters and training configuration settings (e.g. learning_rate, num_leaves)."
+    },
+    "artifact_format": {
+      "type": ["string", "null"],
+      "enum": ["ONNX", "LightGBM_Binary", "LightGBM_Text", null],
+      "description": "Storage format of the serialized model artifact, if trained."
+    },
+    "artifact_hash": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Canonical lowercase SHA-256 digest of the compiled model artifact file."
+    },
+    "metrics": {
+      "type": ["object", "null"],
+      "description": "Evaluation performance metrics measured on the reserved test split, once evaluated.",
+      "properties": {
+        "roc_auc": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "precision": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "recall": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "f1_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "false_positive_rate": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "evaluation_split": { "type": "string", "enum": ["test", "validation"] }
+      },
+      "additionalProperties": true
+    },
+    "created_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp when this model was registered."
+    },
+    "evaluated_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp when evaluation metrics were recorded."
+    }
+  },
+  "additionalProperties": false
+}

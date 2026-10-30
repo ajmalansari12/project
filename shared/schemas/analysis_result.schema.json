@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sentinel-edr.local/schemas/analysis_result.schema.json",
+  "title": "AnalysisResult",
+  "description": "Consolidated outcome of an endpoint analysis job across detection engines.",
+  "type": "object",
+  "required": [
+    "job_id",
+    "analysis_status",
+    "modules_executed",
+    "modules_skipped",
+    "modules_failed",
+    "evidence_ids"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier of the completed or running analysis job."
+    },
+    "analysis_status": {
+      "type": "string",
+      "enum": ["QUEUED", "IN_PROGRESS", "COMPLETED", "FAILED", "CANCELLED"],
+      "description": "Lifecycle state of the analysis job execution."
+    },
+    "verdict": {
+      "type": ["string", "null"],
+      "enum": ["BENIGN", "SUSPICIOUS", "MALICIOUS", null],
+      "description": "Evaluated threat verdict, or null if analysis is incomplete/failed."
+    },
+    "risk_score": {
+      "type": ["number", "null"],
+      "minimum": 0.0,
+      "maximum": 100.0,
+      "description": "Composite normalized risk score from 0.0 to 100.0, or null."
+    },
+    "modules_executed": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of detection module identifiers that executed successfully."
+    },
+    "modules_skipped": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of detection module identifiers skipped due to eligibility or policy."
+    },
+    "modules_failed": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of detection module identifiers that encountered runtime errors."
+    },
+    "evidence_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "description": "List of evidence UUIDs generated during this analysis job."
+    },
+    "hash_reputation": {
+      "type": ["object", "null"],
+      "description": "Local hash-reputation evaluation summary, if performed.",
+      "properties": {
+        "file_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Canonical 64-character lowercase SHA-256 hash digest."
+        },
+        "is_known": {
+          "type": "boolean",
+          "description": "Whether the hash was found in the reputation database."
+        },
+        "verdict": {
+          "type": ["string", "null"],
+          "enum": ["BENIGN", "SUSPICIOUS", "MALICIOUS", null],
+          "description": "Reputation verdict configured for this hash, or null if unknown."
+        },
+        "list_type": {
+          "type": ["string", "null"],
+          "enum": ["ALLOWLIST", "BLOCKLIST", "CUSTOM", null],
+          "description": "Reputation list classification, or null if unknown."
+        }
+      },
+      "required": [
+        "file_hash",
+        "is_known"
+      ],
+      "additionalProperties": false
+    },
+    "ml_detection": {
+      "type": ["object", "null"],
+      "description": "Static PE machine learning inference outcome, if performed.",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "description": "Identifier of the ML model evaluated."
+        },
+        "model_version": {
+          "type": "string",
+          "description": "Version string of the ML model evaluated."
+        },
+        "artifact_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Canonical SHA-256 digest of the model artifact file."
+        },
+        "feature_schema": {
+          "type": "string",
+          "description": "Static PE feature extraction schema version."
+        },
+        "malicious_probability": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Estimated probability that the executable is malicious."
+        },
+        "benign_probability": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Estimated probability that the executable is benign."
+        },
+        "operating_threshold": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Decision threshold applied to evaluate predicted_label."
+        },
+        "predicted_label": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Binary classification decision (0=benign, 1=malicious)."
+        },
+        "predicted_class": {
+          "type": "string",
+          "description": "Classification label ('BENIGN', 'MALICIOUS', or degraded)."
+        },
+        "inference_duration_ms": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Elapsed inference execution time in milliseconds."
+        },
+        "is_degraded": {
+          "type": "boolean",
+          "description": "Whether inference operated in degraded mode."
+        }
+      },
+      "required": [
+        "model_id",
+        "model_version",
+        "artifact_hash",
+        "feature_schema",
+        "malicious_probability",
+        "benign_probability",
+        "operating_threshold",
+        "predicted_label",
+        "predicted_class",
+        "inference_duration_ms"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sentinel-edr.local/schemas/detection_evidence.schema.json",
+  "title": "DetectionEvidence",
+  "description": "Structured detection indicator produced by signature, ML, or behavioral analysis engines.",
+  "type": "object",
+  "required": [
+    "evidence_id",
+    "incident_id",
+    "source",
+    "indicator",
+    "severity",
+    "description",
+    "observed_at"
+  ],
+  "properties": {
+    "evidence_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this piece of evidence."
+    },
+    "incident_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identifier of the security incident this evidence is attached to."
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Engine or module that generated this detection signal (e.g. yara, ml_pe, canary_monitor)."
+    },
+    "indicator": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Specific rule, model feature, or pattern that matched."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"],
+      "description": "Severity rating of the observed indicator."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable explanation of the detection."
+    },
+    "observed_value": {
+      "type": ["string", "null"],
+      "description": "Observed value or matching artifact string."
+    },
+    "confidence": {
+      "type": ["number", "null"],
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Confidence score from 0.0 to 1.0 representing certainty of the detection."
+    },
+    "score_contribution": {
+      "type": ["number", "null"],
+      "description": "Numeric point contribution towards the composite risk score."
+    },
+    "details": {
+      "type": ["object", "null"],
+      "description": "Supplementary structured technical metadata."
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO 8601 timestamp when the indicator was observed."
+    },
+    "analysis_job_id": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Optional identifier of the originating analysis job."
+    }
+  },
+  "additionalProperties": false
+}

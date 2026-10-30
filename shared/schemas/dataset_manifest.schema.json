@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sentinel-edr.local/schemas/dataset_manifest.schema.json",
+  "title": "DatasetManifest",
+  "description": "Manifest defining metadata, provenance, class definitions, and split integrity for an ML dataset collection.",
+  "type": "object",
+  "required": [
+    "manifest_id",
+    "dataset_name",
+    "dataset_version",
+    "schema_version",
+    "source",
+    "label_mapping",
+    "class_definitions",
+    "sample_count",
+    "created_at"
+  ],
+  "properties": {
+    "manifest_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this dataset manifest instance."
+    },
+    "dataset_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Formal dataset collection name (e.g. 'ember')."
+    },
+    "dataset_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Version string of the dataset release (e.g. '2018.v2')."
+    },
+    "schema_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Version of the manifest schema specification."
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Originating source, reference URL, or publisher of the dataset."
+    },
+    "label_mapping": {
+      "type": "object",
+      "description": "Mapping from stringified source labels to normalized target classes (or null for excluded labels).",
+      "additionalProperties": {
+        "type": ["integer", "null"]
+      }
+    },
+    "class_definitions": {
+      "type": "object",
+      "description": "Descriptive names for each normalized target class index (e.g. {'0': 'benign', '1': 'malicious'}).",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "sample_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total number of retained labeled samples documented in the manifest."
+    },
+    "split_counts": {
+      "type": "object",
+      "description": "Breakdown of retained sample counts across partition splits.",
+      "properties": {
+        "train": { "type": "integer", "minimum": 0 },
+        "validation": { "type": "integer", "minimum": 0 },
+        "test": { "type": "integer", "minimum": 0 },
+        "unassigned": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "excluded_unlabeled_count": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Optional count of excluded unlabeled/ambiguous samples from raw source data not included in sample_count or split_counts."
+    },
+    "integrity_digest": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Optional canonical SHA-256 digest of the manifest contents or dataset archive."
+    },
+    "assumptions_and_limitations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Explicit assumptions, bias notes, or constraints regarding the dataset."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp when this manifest was generated."
+    }
+  },
+  "additionalProperties": false
+}

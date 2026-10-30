@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sentinel-edr.local/schemas/api_error.schema.json",
+  "title": "ApiErrorResponse",
+  "description": "Standardized REST API error response envelope defined in api_spec.md.",
+  "type": "object",
+  "required": ["error"],
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable machine-readable error code."
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Safe, human-readable description of the error."
+        },
+        "details": {
+          "description": "Optional structured validation details, error list, or diagnostic context."
+        },
+        "request_id": {
+          "type": ["string", "null"],
+          "description": "Unique correlation identifier for tracing the request."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

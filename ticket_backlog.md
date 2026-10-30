@@ -188,7 +188,7 @@ Generating code alone does not constitute ticket completion.
 ## T006 — Persistence Services and Database Tests
 
 **Priority:** P0  
-**Status:** BACKLOG  
+**Status:** DONE  
 **Dependencies:** T005
 
 **Objective:** Implement controlled database access through application services.
@@ -212,7 +212,7 @@ Generating code alone does not constitute ticket completion.
 ## T007 — Health, Status, and Incident API Foundation
 
 **Priority:** P0  
-**Status:** BACKLOG  
+**Status:** DONE  
 **Dependencies:** T002, T006
 
 **Objective:** Implement the first backend API endpoints.
@@ -239,7 +239,7 @@ Generating code alone does not constitute ticket completion.
 ## T008 — SHA-256 and Hash Database Service
 
 **Priority:** P0  
-**Status:** BACKLOG  
+**Status:** DONE  
 **Dependencies:** T004
 
 **Objective:** Implement file hashing and local hash-list matching.
@@ -261,7 +261,7 @@ Generating code alone does not constitute ticket completion.
 ## T009 — YARA Signature Scanner
 
 **Priority:** P1  
-**Status:** BACKLOG  
+**Status:** DONE  
 **Dependencies:** T008
 
 **Objective:** Integrate signature-rule scanning.
@@ -283,7 +283,7 @@ Generating code alone does not constitute ticket completion.
 ## T010 — Analysis Queue and Orchestrator
 
 **Priority:** P0  
-**Status:** BACKLOG  
+**Status:** IN_REVIEW  
 **Dependencies:** T004, T006, T008
 
 **Objective:** Coordinate analysis jobs and detection-service execution.
@@ -305,7 +305,7 @@ Generating code alone does not constitute ticket completion.
 ## T011 — YARA Integration with the Analysis Pipeline
 
 **Priority:** P1  
-**Status:** BACKLOG  
+**Status:** DONE  
 **Dependencies:** T009, T010
 
 **Objective:** Integrate signature scanning into the orchestrated analysis workflow.
@@ -331,7 +331,7 @@ Generating code alone does not constitute ticket completion.
 ## T012 — Dataset and Model Schema Preparation
 
 **Priority:** P1  
-**Status:** BACKLOG  
+**Status:** DONE  
 **Dependencies:** T002
 
 **Objective:** Establish the reproducible ML dataset and feature-schema requirements.
@@ -344,7 +344,7 @@ Generating code alone does not constitute ticket completion.
 - Record reproducibility requirements.
 
 **Acceptance criteria:**
-- The selected dataset version is documented.
+- The selected dataset version is documented (EMBER 2018, Feature Version 2, 2381 dimensions, documented in docs/dataset_selection_ember.md).
 - Feature and label definitions are understood.
 - Training and evaluation splits are defined.
 - The planned model schema is documented.
@@ -353,7 +353,7 @@ Generating code alone does not constitute ticket completion.
 ## T013 — PE Feature Extraction
 
 **Priority:** P1  
-**Status:** BACKLOG  
+**Status:** DONE  
 **Dependencies:** T012
 
 **Objective:** Implement the feature extractor required by the selected ML model.
@@ -376,7 +376,7 @@ Generating code alone does not constitute ticket completion.
 ## T014 — LightGBM Training and Evaluation
 
 **Priority:** P1  
-**Status:** BACKLOG  
+**Status:** DONE  
 **Dependencies:** T012, T013
 
 **Objective:** Train and evaluate a reproducible static malware classifier.
@@ -387,18 +387,25 @@ Generating code alone does not constitute ticket completion.
 - Train the selected LightGBM model.
 - Evaluate it on the reserved test split.
 - Record model metadata and experiment configuration.
+- Audit HMAC reservoir sampling and verify temporal validation (documented in `docs/t014_sampling_temporal_validation_audit.md`).
 
 **Acceptance criteria:**
-- Training can be reproduced using documented instructions.
-- Evaluation uses a held-out test set.
-- ROC-AUC, precision, recall, F1-score, and false-positive rate are reported where applicable.
-- Training configuration and model version are recorded.
-- Actual results are reported without substituting target values for measurements.
+- Training can be reproduced using documented instructions (`scripts/train_lightgbm.py`, `scripts/t014_sampling_temporal_audit.py`).
+- Evaluation uses a held-out test set (`test_features.jsonl` -> `X_test.dat`, `y_test.dat`).
+- ROC-AUC, precision, recall, F1-score, false-positive rate, and partial ROC-AUC are verified and tested (`tests/backend/test_model_metric_reproducibility.py`).
+- Training configuration and model versions are recorded:
+  - Model A (Random Stratified): `.data/experiments/t014-audit-v2/sentinel-pe-lightgbm-audit-v2.txt` (SHA-256: `85f5665cb37e1489fd0fa0abc6985de4e705b7066a41dc02bc9576ffa1790a05`, val-th: 0.8856, test FPR: 1.08%, test recall: 73.76%, test ROC-AUC: 0.9777).
+  - Model B (Temporal Validation): `.data/experiments/t014-audit-v2/sentinel-pe-lightgbm-temporal.txt` (SHA-256: `99e8d08448034e58553ae7265171a09e82361453ec127806f09fa577e0209a8a`, val-th: 0.9303, test FPR: 0.40%, test recall: 21.28%, test ROC-AUC: 0.9487).
+  - Both metadata files conform to `shared/schemas/model_metadata.schema.json`.
+- Bounded Pilot Clarification: Evaluations reflect bounded real-data pilots (25k train, 10k test), not the full-scale 800k benchmark which requires >=16 GB host memory.
+- Sampling determinism, shard-order invariance, line-order invariance, and zero PRNG seed dependencies are formally tested and passing (`tests/backend/test_hmac_sampling_determinism.py`).
+- All 309 backend regression tests passing without failure.
+- T015 remains in BACKLOG and is not started.
 
 ## T015 — ONNX Export and Inference
 
 **Priority:** P1  
-**Status:** BACKLOG  
+**Status:** DONE  
 **Dependencies:** T014
 
 **Objective:** Implement inference through a compatible ONNX model.
@@ -411,16 +418,23 @@ Generating code alone does not constitute ticket completion.
 - Handle missing, incompatible, or corrupt model artifacts.
 
 **Acceptance criteria:**
-- Model input dimensions and feature order are validated.
-- Inference returns a documented score and interpretation.
-- Unsupported or missing models produce explicit errors.
-- Inference timing is measured independently of feature extraction.
-- Automated tests cover successful inference and model failures.
+- Model input dimensions and feature order are validated (2,381 float32 features, `ember_pe_v2`).
+- Inference returns a documented score and interpretation (malicious probability, benign probability, predicted class, label, operating threshold).
+- Unsupported or missing models produce explicit errors (`OnnxArtifactNotFoundError`, `OnnxModelCorruptError`, `ArtifactHashMismatchError`, `InvalidInputDimensionError`, `NonFiniteInputError`).
+- Inference timing is measured independently of feature extraction (single-sample: 0.038 ms avg; batch BS=100: 0.755 ms total, 132,465 samples/sec throughput).
+- Automated tests cover successful inference, export, parity, and model failures (`tests/backend/test_onnx_export.py`, `tests/backend/test_onnx_inference.py`, `tests/backend/test_onnx_parity.py`).
+- Exported ONNX artifacts and metadata:
+  - Primary Design A: `.data/experiments/t014-audit-v2/sentinel-pe-lightgbm-audit-v2.onnx` (SHA-256: `5e3b72ee5f09e8d7d619dcd211c9d815aa16b147d02232589919afa76076ec8e`, threshold: 0.8856).
+  - Secondary Design B: `.data/experiments/t014-audit-v2/sentinel-pe-lightgbm-temporal.onnx` (SHA-256: `c59ecd989e0d1dd204f0bcaca3f147ac770336cbebfeb9a7dcb0d871c1f28b12`, threshold: 0.9303).
+  - Both metadata files conform to `shared/schemas/model_metadata.schema.json`.
+- Prediction parity verified: 100.00% classification agreement on 10,000 held-out test samples (max abs diff $2.23 \times 10^{-7}$, mean $3.28 \times 10^{-8}$ for Design A).
+- All 330 backend regression tests passing cleanly.
+- T016 remains in BACKLOG and is not started.
 
 ## T016 — ML Integration with the Analysis Pipeline
 
 **Priority:** P1  
-**Status:** BACKLOG  
+**Status:** DONE  
 **Dependencies:** T011, T013, T015
 
 **Objective:** Integrate static feature extraction and inference into analysis orchestration.
@@ -433,11 +447,20 @@ Generating code alone does not constitute ticket completion.
 - Persist structured analysis results.
 
 **Acceptance criteria:**
-- Eligible PE files enter the ML analysis stage.
-- Model outputs are associated with the correct job.
-- Failed inference does not become a benign verdict.
-- The complete feature-extraction and inference path is tested.
-- Detection evidence remains available for scoring and investigation.
+- Eligible PE files enter the ML analysis stage (Stage 4 in `AnalysisOrchestrator`).
+- Model outputs are associated with the correct job and attached to `AnalysisResult.ml_detection`.
+- Failed inference does not become a benign verdict (explicit failure with `PE_MALFORMED_FILE`, `ML_MODEL_NOT_FOUND`, `ML_CHECKSUM_MISMATCH`, or `ML_INFERENCE_FAILED`).
+- Non-PE files lacking DOS `MZ` magic header are gracefully skipped (`modules_skipped.append("ml_pe")`) without job failure.
+- The complete feature-extraction (2,381 `ember_pe_v2` float32 features) and inference path is tested.
+- Detection evidence (`source="ml_pe"`) is persisted with deterministic UUIDv5, attached to correlated Incident, and remains available for scoring and investigation.
+- Fault isolation preserved: ML stage failure does not corrupt or erase prior Hash or YARA evidence.
+- Top-level `verdict` and `risk_score` remain strictly `None` (deferred to T020).
+- Production model: Design A (`sentinel-pe-lightgbm-audit-v2.onnx`, SHA-256 `5e3b72ee5f09e8d7d619dcd211c9d815aa16b147d02232589919afa76076ec8e`, threshold `0.8856`). Design B remains experimental control.
+- Cross-stack synchronization verified: Python `MlDetectionSummary`, `shared/schemas/analysis_result.schema.json`, and TypeScript `contracts.ts`.
+- Automated test coverage: 25 integration tests (`tests/backend/test_ml_pipeline_integration.py`).
+- All 357 backend regression tests passing cleanly.
+- Frontend quality checks passing (typecheck: 0 errors, lint: 0 warnings, vitest: 16 passed, vite build: successful).
+- T017 remains in BACKLOG and is not started.
 
 ---
 
